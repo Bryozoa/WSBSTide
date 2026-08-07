@@ -8,11 +8,6 @@
     Original XTide source code date: 1997-08-28
     Last modified 1998-03-25 by Mike Hopper for WXTide32
 
-    This program uses the harmonic method to compute tide levels.
-    All of the data and constants are read in from the harmonics file.
-    Please refer to README for more information.
-
-
     Copyright (C) 1997  David Flater.
     Also starring:  Dale DePriest; Dean Pentcheff; Jeff Dairiki; Mike Hopper.
 
