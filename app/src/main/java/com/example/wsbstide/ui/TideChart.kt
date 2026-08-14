@@ -1,5 +1,6 @@
 package com.example.wsbstide.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -7,6 +8,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -14,10 +18,15 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.example.wsbstide.model.TidePoint
 
+private val DayColor   = Color(1f, 1f, 128f / 255f, 1f)   // rgb:ff/ff/80 — matches legacy bgday
+private val NightColor = Color(128f / 255f, 128f / 255f, 1f, 1f) // rgb:80/80/ff — matches legacy bgnite
+
 @Composable
 fun TideChart(
     points: List<TidePoint>,
-    modifier: Modifier = Modifier
+    startsAsDay: Boolean = true,
+    sunEventMillis: List<Long> = emptyList(),
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     if (points.size < 2) {
         return
@@ -84,6 +93,23 @@ fun TideChart(
                     (1f - fraction.toFloat()) * chartHeight
         }
 
+        // Day / night background bands
+        var isDay = startsAsDay
+        var bandStartX = leftPadding
+        val transitions = sunEventMillis
+            .filter { it in minTime..maxTime }
+            .map { xForTime(it) } + listOf(leftPadding + chartWidth)
+        for (tx in transitions) {
+            val bandColor = if (isDay) DayColor else NightColor
+            drawRect(
+                color = bandColor,
+                topLeft = Offset(bandStartX, topPadding),
+                size = Size((tx - bandStartX).coerceAtLeast(0f), chartHeight),
+            )
+            isDay = !isDay
+            bandStartX = tx
+        }
+
         // Horizontal grid
         repeat(5) { index ->
             val fraction = index / 4f
@@ -94,11 +120,11 @@ fun TideChart(
 
             drawLine(
                 color = gridColor,
-                start = androidx.compose.ui.geometry.Offset(
+                start = Offset(
                     leftPadding,
                     y
                 ),
-                end = androidx.compose.ui.geometry.Offset(
+                end = Offset(
                     leftPadding + chartWidth,
                     y
                 ),

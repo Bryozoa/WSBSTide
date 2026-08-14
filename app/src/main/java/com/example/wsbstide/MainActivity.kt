@@ -4,6 +4,7 @@ import TideCalculator
 import TideGraphGenerator
 import TideRepository
 import StandardTideTimeBasis
+import sunEvents
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,19 +30,32 @@ class MainActivity : ComponentActivity() {
         val generator = TideGraphGenerator(calculator)
 
         val now = System.currentTimeMillis()
+        val startMs = now - 12 * 3_600_000L
+        val endMs   = now + 36 * 3_600_000L
+
         val points = generator.generate(
-            startMillis = now - 12 * 3_600_000L,
-            endMillis   = now + 36 * 3_600_000L,
+            startMillis = startMs,
+            endMillis   = endMs,
             stepMinutes = 5,
             station     = station,
+        )
+
+        // WhiteSeaBioStation coordinates from harm_msc header
+        val (startsAsDay, sunEventMillis) = sunEvents(
+            latDeg    = 66.55,
+            lonEastDeg = 33.10,
+            startMs   = startMs,
+            endMs     = endMs,
         )
 
         setContent {
             WSBSTideTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     TideChart(
-                        points = points,
-                        modifier = Modifier
+                        points         = points,
+                        startsAsDay    = startsAsDay,
+                        sunEventMillis = sunEventMillis,
+                        modifier       = Modifier
                             .padding(innerPadding)
                             .padding(16.dp),
                     )
