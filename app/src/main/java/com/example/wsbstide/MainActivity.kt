@@ -83,7 +83,6 @@ private fun TideScreen(
     displayOffsetMs: Long,
     modifier: Modifier = Modifier,
 ) {
-    // Ticks forward every minute — same cadence as legacy hairy/clock redraw.
     var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -92,12 +91,28 @@ private fun TideScreen(
         }
     }
 
+    val sortedPoints       = remember(points) { points.sortedBy { it.timestampMillis } }
+    val dataStartMs        = sortedPoints.first().timestampMillis
+    val dataEndMs          = sortedPoints.last().timestampMillis
+    val viewportDurationMs = 12L * 3_600_000L
+    val clampMax           = (dataEndMs - viewportDurationMs).coerceAtLeast(dataStartMs)
+
+    // Initialise once so "now" sits 2 h from the left edge; not re-initialised on minute ticks.
+    var viewportStartMs by remember {
+        mutableLongStateOf((System.currentTimeMillis() - 2L * 3_600_000L).coerceIn(dataStartMs, clampMax))
+    }
+
     TideChart(
-        points          = points,
-        nowMs           = nowMs,
-        startsAsDay     = startsAsDay,
-        sunEventMillis  = sunEventMillis,
-        displayOffsetMs = displayOffsetMs,
-        modifier        = modifier,
+        points             = points,
+        nowMs              = nowMs,
+        startsAsDay        = startsAsDay,
+        sunEventMillis     = sunEventMillis,
+        displayOffsetMs    = displayOffsetMs,
+        viewportStartMs    = viewportStartMs,
+        viewportDurationMs = viewportDurationMs,
+        onDragDeltaMs      = { delta ->
+            viewportStartMs = (viewportStartMs + delta).coerceIn(dataStartMs, clampMax)
+        },
+        modifier = modifier,
     )
 }
