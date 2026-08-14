@@ -43,9 +43,20 @@ private fun niceStep(range: Double, targetCount: Int = 5): Double {
     return nice * mag
 }
 
+/** Linear interpolation of tide height at [ms] from a pre-sorted points list. */
+private fun interpolateHeight(sorted: List<TidePoint>, ms: Long): Double {
+    if (ms <= sorted.first().timestampMillis) return sorted.first().height
+    if (ms >= sorted.last().timestampMillis)  return sorted.last().height
+    val i = sorted.indexOfFirst { it.timestampMillis >= ms }
+    val a = sorted[i - 1]; val b = sorted[i]
+    val f = (ms - a.timestampMillis).toDouble() / (b.timestampMillis - a.timestampMillis)
+    return a.height + f * (b.height - a.height)
+}
+
 @Composable
 fun TideChart(
     points: List<TidePoint>,
+    nowMs: Long = System.currentTimeMillis(),
     startsAsDay: Boolean = true,
     sunEventMillis: List<Long> = emptyList(),
     /** UTC offset for display (e.g. 10800000 for UTC+3). Used to convert timestamps to local hours. */
@@ -226,5 +237,16 @@ fun TideChart(
             color = lineColor,
             style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
         )
+
+        // ── "Now" cross — drawn last so it sits on top of everything ────────
+        // Matches legacy's two-line cross (x, y±4px) and (x±4px, y), but in red.
+        if (nowMs in minTime..maxTime) {
+            val nx = xForTime(nowMs)
+            val ny = yForHeight(interpolateHeight(sortedPoints, nowMs))
+            val arm = 5.dp.toPx()
+            val stroke = 2.dp.toPx()
+            drawLine(Color.Red, Offset(nx, ny - arm), Offset(nx, ny + arm), stroke)
+            drawLine(Color.Red, Offset(nx - arm, ny), Offset(nx + arm, ny), stroke)
+        }
     }
 }
