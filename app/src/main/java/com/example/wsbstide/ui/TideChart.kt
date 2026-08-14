@@ -27,6 +27,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.wsbstide.model.TidePoint
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
@@ -103,7 +106,7 @@ fun TideChart(
             },
     ) {
         val topPadding    = 12.dp.toPx()
-        val bottomPadding = 28.dp.toPx()
+        val bottomPadding = 44.dp.toPx()
 
         // Chart fills the full canvas width; depth labels are overlaid on the left edge.
         val chartWidth  = size.width
@@ -220,8 +223,19 @@ fun TideChart(
                     Pair(8.dp.toPx(), 2.dp.toPx())
                 drawLine(labelColor, Offset(x, bottomY - tickLen), Offset(x, bottomY), tickWidth)
 
-                if (!isHalfHour && localHour % labelEvery == 0)
-                    canvas.nativeCanvas.drawText(localHour.toString(), x, bottomY + labelPx + 2.dp.toPx(), paint)
+                if (!isHalfHour && localHour % labelEvery == 0) {
+                    val labelY = bottomY + labelPx + 2.dp.toPx()
+                    canvas.nativeCanvas.drawText(localHour.toString(), x, labelY, paint)
+                    if (localHour == 0) {
+                        val cal = Calendar.getInstance(TimeZone.getDefault())
+                        cal.timeInMillis = t
+                        val day = cal.get(Calendar.DAY_OF_MONTH)
+                        val mon = cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.ENGLISH) ?: ""
+                        paint.textAlign = Paint.Align.LEFT
+                        canvas.nativeCanvas.drawText("$day$mon→", x, labelY + labelPx + 3.dp.toPx(), paint)
+                        paint.textAlign = Paint.Align.CENTER
+                    }
+                }
 
                 t += halfHourMs
             }
