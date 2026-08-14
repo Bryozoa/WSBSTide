@@ -33,6 +33,7 @@ import kotlin.math.pow
 
 private val DayColor   = Color(1f, 1f, 128f / 255f, 1f)          // rgb:ff/ff/80 — matches legacy bgday
 private val NightColor = Color(128f / 255f, 128f / 255f, 1f, 1f)  // rgb:80/80/ff — matches legacy bgnite
+private val TideGreen  = Color(0xFF163417)                 // tide line and extremum markers
 
 private fun niceStep(range: Double, targetCount: Int = 5): Double {
     val raw = range / targetCount
@@ -75,7 +76,6 @@ fun TideChart(
 
     val sortedPoints = remember(points) { points.sortedBy { it.timestampMillis } }
 
-    val lineColor      = MaterialTheme.colorScheme.primary
     val labelColor     = MaterialTheme.colorScheme.onSurface
     val gridColor      = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)
     val labelColorArgb = labelColor.toArgb()
@@ -176,13 +176,18 @@ fun TideChart(
             }
         }
 
-        // ── Time axis: hourly tick marks + labels ────────────────────────────
-        val bottomY     = topPadding + chartHeight
-        val hourMs      = 3_600_000L
-        val firstHourMs = run {
+        // ── Time axis: tick marks + labels ──────────────────────────────────
+        // Hour ticks are 2× the original size; half-hour ticks use the original size.
+        // Original: regular hour = 4dp long / 1dp wide; midnight = 8dp / 2dp.
+        // Now:      regular hour = 8dp / 2dp; midnight = 16dp / 4dp; half-hour = 4dp / 1dp.
+        val bottomY    = topPadding + chartHeight
+        val hourMs     = 3_600_000L
+        val halfHourMs = 1_800_000L
+        // Snap to the first half-hour boundary at or after minTime (in local time).
+        val firstTickMs = run {
             val localMin = minTime + displayOffsetMs
-            val snapped  = (localMin / hourMs) * hourMs
-            val first    = if (snapped < localMin) snapped + hourMs else snapped
+            val snapped  = (localMin / halfHourMs) * halfHourMs
+            val first    = if (snapped < localMin) snapped + halfHourMs else snapped
             first - displayOffsetMs
         }
         val pxPerHour  = chartWidth / (timeRange.toDouble() / hourMs)
@@ -202,17 +207,36 @@ fun TideChart(
                 textAlign   = Paint.Align.CENTER
                 isAntiAlias = true
             }
-            var t = firstHourMs
+            var t = firstTickMs
             while (t <= maxTime) {
-                val x          = xForTime(t)
+                val x            = xForTime(t)
+                val minuteOfHour = ((t + displayOffsetMs) / 60_000L % 60).toInt()
+                val isHalfHour = minuteOfHour == 30
                 val localHour  = ((t + displayOffsetMs) / hourMs % 24).toInt()
-                val isMidnight = localHour == 0
-                val tickTop    = if (isMidnight) bottomY - 8.dp.toPx() else bottomY - 4.dp.toPx()
-                drawLine(labelColor, Offset(x, tickTop), Offset(x, bottomY),
-                    if (isMidnight) 2.dp.toPx() else 1.dp.toPx())
-                if (localHour % labelEvery == 0)
+
+                val (tickLen, tickWidth) = if (isHalfHour)
+                    Pair(4.dp.toPx(), 1.dp.toPx())
+                else
+                    Pair(8.dp.toPx(), 2.dp.toPx())
+                drawLine(labelColor, Offset(x, bottomY - tickLen), Offset(x, bottomY), tickWidth)
+
+                if (!isHalfHour && localHour % labelEvery == 0)
                     canvas.nativeCanvas.drawText(localHour.toString(), x, bottomY + labelPx + 2.dp.toPx(), paint)
-                t += hourMs
+
+                t += halfHourMs
+            }
+        }
+
+        // ── Extremum drop-lines ──────────────────────────────────────────────
+        // Thin vertical green lines from each high/low tide point down to the bottom axis.
+        for (i in 1 until sortedPoints.size - 1) {
+            val prev = sortedPoints[i - 1].height
+            val cur  = sortedPoints[i].height
+            val next = sortedPoints[i + 1].height
+            if (cur > prev && cur > next || cur < prev && cur < next) {
+                val x = xForTime(sortedPoints[i].timestampMillis)
+                val y = yForHeight(cur)
+                drawLine(TideGreen, Offset(x, y), Offset(x, bottomY), 1.dp.toPx())
             }
         }
 
@@ -222,7 +246,7 @@ fun TideChart(
         for (point in sortedPoints.drop(1)) {
             path.lineTo(xForTime(point.timestampMillis), yForHeight(point.height))
         }
-        drawPath(path, lineColor, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawPath(path, TideGreen, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
 
         // ── "Now" cross ─────────────────────────────────────────────────────
         if (nowMs in minTime..maxTime) {

@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
             endMs      = now + 30L * 24 * 3_600_000L,
         )
 
-        val displayOffsetMs = station.meridianSeconds * 1000L
+        val displayOffsetMs = TimeZone.getDefault().getOffset(now).toLong()
 
         setContent {
             WSBSTideTheme {
@@ -120,6 +120,13 @@ private fun TideScreen(
     }
 
     Column(modifier = modifier) {
+        Text(
+            text      = "White Sea Biological Station",
+            style     = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign  = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier   = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        )
         TideChart(
             points             = points,
             nowMs              = nowMs,
@@ -156,7 +163,16 @@ private fun InfoPanel(
     val timeFmt = remember { SimpleDateFormat("HH:mm",          Locale.getDefault()).apply { timeZone = tz } }
     val dateFmt = remember { SimpleDateFormat("MMM d, HH:mm",   Locale.getDefault()).apply { timeZone = tz } }
 
-    fun fmtNow(ms: Long)  = timeFmt.format(Date(ms))
+    val utcLabel = run {
+        val offsetMs  = tz.getOffset(nowMs)
+        val sign      = if (offsetMs >= 0) "+" else "-"
+        val absMs     = kotlin.math.abs(offsetMs)
+        val hours     = absMs / 3_600_000
+        val minutes   = (absMs % 3_600_000) / 60_000
+        if (minutes == 0) "UTC$sign$hours" else "UTC$sign$hours:${minutes.toString().padStart(2, '0')}"
+    }
+
+    fun fmtNow(ms: Long) = "${timeFmt.format(Date(ms))} $utcLabel"
     fun fmtEvent(ms: Long?): String {
         if (ms == null) return "—"
         val nowCal   = Calendar.getInstance(tz).apply { timeInMillis = nowMs }
