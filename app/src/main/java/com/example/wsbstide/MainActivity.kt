@@ -52,10 +52,11 @@ class MainActivity : ComponentActivity() {
             WSBSTideTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     TideChart(
-                        points         = points,
-                        startsAsDay    = startsAsDay,
-                        sunEventMillis = sunEventMillis,
-                        modifier       = Modifier
+                        points          = points,
+                        startsAsDay     = startsAsDay,
+                        sunEventMillis  = sunEventMillis,
+                        displayOffsetMs = station.meridianSeconds * 1000L,
+                        modifier        = Modifier
                             .padding(innerPadding)
                             .padding(16.dp),
                     )
