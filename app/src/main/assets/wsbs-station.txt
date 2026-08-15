@@ -1,0 +1,54 @@
+# WhiteSeaBioStation harmonic constants
+# Source: WXTide32 harm_msc (data from 2004, origin unknown)
+# Replace amplitude_m and kappa_deg values below when new station measurements arrive.
+#
+name: WhiteSeaBioStation, Russia
+latitude: 66.55
+longitude: 33.10
+timezone: Europe/Moscow
+meridianSeconds: 10800
+datum_m: 1.17
+units: meters
+#
+# Constituent table.
+# kappa_deg is the Greenwich phase lag in degrees (normalized to 0-360 by the script).
+# Zero amplitude entries are kept for completeness but do not affect the prediction.
+# Column:  name  amplitude_m  kappa_deg
+#
+J1      0.0000  0.00
+K1      0.0682  107.50
+K2      0.0442  206.50
+L2      0.0403  1966.70
+M1      0.0000  0.00
+M2      0.6880  129.70
+M3      0.0013  64.94
+M4      0.0953  185.85
+M6      0.0069  43.48
+M8      0.0054  178.60
+N2      0.1295  86.84
+2N2     0.0000  0.00
+O1      0.0000  0.00
+OO1     0.0000  0.00
+P1      0.0226  114.60
+Q1      0.0070  185.90
+2Q1     0.0000  0.00
+R2      0.0000  0.00
+S1      0.0000  0.00
+S2      0.1624  184.11
+S4      0.0075  323.52
+S6      0.0000  0.00
+T2      0.0000  0.00
+LAMBDA2 0.0000  0.00
+MU2     0.0298  247.20
+NU2     0.0000  0.00
+RHO1    0.0000  0.00
+MK3     0.0095  132.38
+2MK3    0.0000  0.00
+MN4     0.0371  142.40
+MS4     0.0559  247.57
+2SM2    0.0000  0.00
+MF      0.0000  0.00
+MSF     0.0502  289.25
+MM      0.0000  0.00
+SA      0.0000  0.00
+SSA     0.0000  0.00
