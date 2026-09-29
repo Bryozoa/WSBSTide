@@ -9,3 +9,8 @@
 .cxx
 local.properties
 Legacy_WSBSTide
+
+# Release signing — never commit the real keystore or its credentials
+keystore.properties
+*.jks
+*.keystore

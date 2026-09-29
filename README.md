@@ -54,6 +54,27 @@ tools/
 Legacy_WSBSTide/         Original WXTide32 C source, kept for reference
 ```
 
+## Releasing to Google Play
+
+1. Generate a release keystore (do this once, keep the file and passwords safe —
+   losing them means you can never update the app under the same listing again):
+
+   ```sh
+   keytool -genkeypair -v -keystore release.keystore.jks -alias wsbstide \
+     -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+2. Copy `keystore.properties.example` to `keystore.properties` (gitignored) and
+   fill in the real `storeFile` path, `storePassword`, `keyAlias`, `keyPassword`.
+3. Build the signed release bundle: `./gradlew bundleRelease`. The `.aab` lands
+   in `app/build/outputs/bundle/release/`.
+4. Enable GitHub Pages for this repo (Settings → Pages → deploy from `/docs` on
+   `master`) so the privacy policy at `docs/privacy-policy.html` goes live at
+   `https://bryozoa.github.io/WSBSTide/privacy-policy.html`.
+5. In Play Console: create the app, fill in the listing using `docs/store-listing.md`
+   as a draft, complete the data safety form and content rating questionnaire,
+   upload the `.aab` to an internal testing track, test it, then promote to production.
+
 ## Credits
 
 *Ancient tidal wisdom, still current.*

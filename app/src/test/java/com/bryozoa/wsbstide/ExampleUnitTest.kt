@@ -1,4 +1,4 @@
-package com.example.wsbstide
+package com.bryozoa.wsbstide
 
 import org.junit.Test
 
